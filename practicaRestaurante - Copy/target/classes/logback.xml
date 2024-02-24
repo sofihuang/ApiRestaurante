@@ -1,0 +1,33 @@
+<!--  Este es un fichero que nos permite configurar los logs en nuestro proyecto  -->
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- donde configurar patron del fichero -->
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <!--  Appender para archivo: RollingFile: fichero que contiene log de cada dia -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>salidaLog.log</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} - [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+        <!--  Política de rotación del archivo de log  -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>salidaLog-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
+        </rollingPolicy>
+    </appender>
+    <!--     <logger name="com.psp.tema5.ejemploRest" level="INFO" /> -->
+    <!--     <logger name="com.psp.tema5.ejemploRest" level="DEBUG" \\  additivity="false" para que no duplique mismo log/> -->
+    <logger name="com.example.practicaRestaurante" level="debug" additivity="false">
+        <!-- salida de log: STDOUT en cosola , file en un fichero -->
+       <appender-ref ref="STDOUT"/>
+       <appender-ref ref="FILE"/>
+   </logger>
+   <root level="error">
+       <appender-ref ref="STDOUT"/>
+       <appender-ref ref="FILE"/>
+   </root>
+</configuration>
