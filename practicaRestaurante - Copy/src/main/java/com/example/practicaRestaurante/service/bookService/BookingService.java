@@ -22,8 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class BookingService implements IBookingService {
     private static int nextBookingID = 1;
 
-    private static Logger logger = LoggerFactory.getLogger(BookingService.class);
-    private static ConcurrentHashMap<Integer, Booking> bookingData = new ConcurrentHashMap<>();
+    private final static Logger logger = LoggerFactory.getLogger(BookingService.class);
+    private final static ConcurrentHashMap<Integer, Booking> bookingData = new ConcurrentHashMap<>();
     private final TableService tableService;
 
     @Autowired
@@ -37,7 +37,7 @@ public class BookingService implements IBookingService {
         if (result.getStatusCode() == HttpStatus.CREATED) {
             booking.setBookingID(nextBookingID++);
             bookingData.put(booking.getBookingID(), booking);
-            logger.info("Created booking: "+booking);
+            logger.info("Created booking: {}", booking);
         }
         return result;
     }
@@ -79,12 +79,16 @@ public class BookingService implements IBookingService {
         Result result = new Result();
 
         ResponseEntity<Result> NOT_FOUND = checkId(id, result);
-        if (NOT_FOUND != null) return NOT_FOUND;
+        if (NOT_FOUND != null) {
+            return NOT_FOUND;
+        }
 
         Booking booking = bookingData.get(id);
 
         ResponseEntity<Result> NOT_FOUND1 = checkBooking(id, booking, result);
-        if (NOT_FOUND1 != null) return NOT_FOUND1;
+        if (NOT_FOUND1 != null) {
+            return NOT_FOUND1;
+        }
 
         bookingData.remove(id);
         logger.info("Cacelled booking: "+booking);
@@ -138,7 +142,7 @@ public class BookingService implements IBookingService {
                 availableTables.add(table);
             }
         }
-        logger.info("Table available for day:"+day+", start time: "+startTime+" , end time: "+endTime +": "+availableTables);
+        logger.info("Table available for day:{}, start time: {}, end time: {}, availableTables: {}", day, startTime, endTime, availableTables);
         return availableTables;
     }
 
@@ -163,10 +167,14 @@ public class BookingService implements IBookingService {
         Result result = new Result();
 
         ResponseEntity<Result> BAD_REQUEST = validID(id, result);
-        if (BAD_REQUEST != null) return BAD_REQUEST;
+        if (BAD_REQUEST != null) {
+            return BAD_REQUEST;
+        }
 
         ResponseEntity<Result> BAD_REQUEST1 = checkBooking(booking, result);
-        if (BAD_REQUEST1 != null) return BAD_REQUEST1;
+        if (BAD_REQUEST1 != null) {
+            return BAD_REQUEST1;
+        }
 
         Booking oldBooking = bookingData.get(id);
 
@@ -176,7 +184,7 @@ public class BookingService implements IBookingService {
 
     private static ResponseEntity<Result> checkOldBooking(Integer id,Booking booking, Booking oldBooking, Result result) {
         if (oldBooking == null) {
-            logger.error("Can't find booking with id: "+ id +" for updating.");
+            logger.error("Can't find booking with id: {} for updating.", id);
             result.setResult(false);
             result.setMessage("table with id " + id + " not found");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
@@ -212,34 +220,52 @@ public class BookingService implements IBookingService {
         Result result = new Result();
 
         ResponseEntity<Result> BAD_REQUEST5 = validBookingId(booking, result);
-        if (BAD_REQUEST5 != null) return BAD_REQUEST5;
+        if (BAD_REQUEST5 != null) {
+            return BAD_REQUEST5;
+        }
 
         ResponseEntity<Result> BAD_REQUEST6 = isTableExiste(booking, result);
-        if (BAD_REQUEST6 != null) return BAD_REQUEST6;
+        if (BAD_REQUEST6 != null) {
+            return BAD_REQUEST6;
+        }
 
         ResponseEntity<Result> BAD_REQUEST = checkDayTime(booking, result);
-        if (BAD_REQUEST != null) return BAD_REQUEST;
+        if (BAD_REQUEST != null) {
+            return BAD_REQUEST;
+        }
 
         ResponseEntity<Result> BAD_REQUEST1 = checkCustomer(booking, result);
-        if (BAD_REQUEST1 != null) return BAD_REQUEST1;
+        if (BAD_REQUEST1 != null) {
+            return BAD_REQUEST1;
+        }
 
         ResponseEntity<Result> BAD_REQUEST2 = checkCustomerName(booking, result);
-        if (BAD_REQUEST2 != null) return BAD_REQUEST2;
+        if (BAD_REQUEST2 != null) {
+            return BAD_REQUEST2;
+        }
 
         ResponseEntity<Result> BAD_REQUEST3 = checkTel(booking, result);
-        if (BAD_REQUEST3 != null) return BAD_REQUEST3;
+        if (BAD_REQUEST3 != null) {
+            return BAD_REQUEST3;
+        }
 
         ResponseEntity<Result> BAD_REQUEST4 = checkGuestNumber(booking, result);
-        if (BAD_REQUEST4 != null) return BAD_REQUEST4;
+        if (BAD_REQUEST4 != null) {
+            return BAD_REQUEST4;
+        }
 
         // Verificar si el número de invitados es mayor que la capacidad de la mesa
         Table table = tableService.searchTable(booking.getTableID());
 
         ResponseEntity<Result> BAD_REQUEST7 = isCapacityExceed(booking, table, result);
-        if (BAD_REQUEST7 != null) return BAD_REQUEST7;
+        if (BAD_REQUEST7 != null) {
+            return BAD_REQUEST7;
+        }
 
         ResponseEntity<Result> CONFLICT = isBookingExisted(booking, result);
-        if (CONFLICT != null) return CONFLICT;
+        if (CONFLICT != null) {
+            return CONFLICT;
+        }
 
         result.setResult(true);
         result.setMessage(msg);
@@ -319,7 +345,7 @@ public class BookingService implements IBookingService {
 
     private ResponseEntity<Result> isTableExiste(Booking booking, Result result) {
         if (!tableService.isTableExist(booking.getTableID())) {
-            logger.error("Table's ID doesn't exist,so creating/updating booking is failed.");
+            logger.error("Table's ID: {} doesn't exist,so creating/updating booking is failed.", booking.getTableID());
             result.setResult(false);
             result.setMessage("Table with id " + booking.getTableID() + " doesn't exists");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
